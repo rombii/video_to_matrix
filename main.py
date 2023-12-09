@@ -13,15 +13,14 @@
 
 
 import cv2
-import sys
-import matplotlib.pyplot as plt
 import numpy as np
-import os
+import serial
 
 
 def play_video(video_file):
     # Create a VideoCapture object
     cap = cv2.VideoCapture(video_file)
+    ser = serial.Serial('COM3', '9600')
 
     # Check if video opened successfully
     if not cap.isOpened():
@@ -35,15 +34,23 @@ def play_video(video_file):
         if ret:
             # Display the frame
             grey = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            cv2.imshow('Frame', grey)
-
-            map_lambda = lambda x: ' ' if x > 127 else '$'
+            cv2.imshow("Frame", grey)
+            map_lambda = lambda x: 1 if x > 127 else 0
             map_vectorized = np.vectorize(map_lambda)
             mapped_grey = map_vectorized(grey)
 
-            os.system('cls' if os.name == 'nt' else 'clear')
-            for w in mapped_grey:
-                print(w)
+            bars = np.zeros((2, 16))
+
+            grey16x16 = np.flip(np.vstack([bars, mapped_grey, bars]), axis=1).astype(int)
+
+
+            frame_bytes = bytes(np.packbits(grey16x16))
+
+            ser.write(frame_bytes)
+           
+            # frame_string = np.array2string(grey16x16.astype(int))
+            # print(frame_string.replace('[', '').replace(']', '').replace(' ', '').replace('\n', ''))
+            
 
             # Press Q on keyboard to exit
             if cv2.waitKey(25) == ord('q'):
@@ -58,4 +65,4 @@ def play_video(video_file):
     cv2.destroyAllWindows()
 
 
-play_video('output2418.mp4')
+play_video('output1612.mp4')
