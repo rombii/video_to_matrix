@@ -1,15 +1,10 @@
-# from moviepy.video.io.ffmpeg_tools import ffmpeg_resize
-# import sys
-#
-#
-# def resize_video(input_file, output_file, size):
-#     ffmpeg_resize(input_file, output_file, size)
-#
-#
-# input_file = 'input.mp4'
-# output_file = 'output2418.mp4'
-# size = (int(24), int(18))
-# resize_video(input_file, output_file, size)
+from moviepy.video.io.ffmpeg_tools import ffmpeg_resize
+import sys
+
+
+def resize_video(input_file, output_file, size):
+    ffmpeg_resize(input_file, output_file, size)
+
 
 
 import cv2
@@ -20,7 +15,7 @@ import serial
 def play_video(video_file):
     # Create a VideoCapture object
     cap = cv2.VideoCapture(video_file)
-    ser = serial.Serial('COM3', '9600')
+    ser = serial.Serial('COM3')
 
     # Check if video opened successfully
     if not cap.isOpened():
@@ -34,23 +29,18 @@ def play_video(video_file):
         if ret:
             # Display the frame
             grey = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            cv2.imshow("Frame", grey)
-            map_lambda = lambda x: 1 if x > 127 else 0
+            # cv2.imshow("Frame", grey)
+            map_lambda = lambda x: 1 if x > grey.mean() else 0
             map_vectorized = np.vectorize(map_lambda)
             mapped_grey = map_vectorized(grey)
 
             bars = np.zeros((2, 16))
 
-            grey16x16 = np.flip(np.vstack([bars, mapped_grey, bars]), axis=1).astype(int)
-
+            grey16x16 = np.vstack([bars, mapped_grey, bars]).astype(int)
 
             frame_bytes = bytes(np.packbits(grey16x16))
 
             ser.write(frame_bytes)
-           
-            # frame_string = np.array2string(grey16x16.astype(int))
-            # print(frame_string.replace('[', '').replace(']', '').replace(' ', '').replace('\n', ''))
-            
 
             # Press Q on keyboard to exit
             if cv2.waitKey(25) == ord('q'):
@@ -65,4 +55,8 @@ def play_video(video_file):
     cv2.destroyAllWindows()
 
 
-play_video('output1612.mp4')
+input_file = 'input.mp4'
+output_file = 'output1612.mp4'
+size = (int(16), int(12))
+# resize_video(input_file, output_file, size)
+play_video(output_file)
